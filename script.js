@@ -55,132 +55,166 @@ const students = [
   "Özgür Dayanır",
 ];
 
-// Class to manage student picking and animations
 class StudentPicker {
   constructor() {
-    // Initialize DOM elements for student list and picked student card
     this.studentList = document.getElementById("studentList");
     this.pickedStudentCard = document.getElementById("pickedStudentCard");
     this.pickButton = document.getElementById("pickButton");
-
-    // Create a copy of the students array to modify (students left to choose from)
+    this.editButton = document.getElementById("editButton");
     this.availableStudents = [...students];
+    this.isEditMode = false;
 
-    // Create student cards in the UI
-    this.createStudentCards();
-
-    // Add event listener for the button to pick a random student
-    this.pickButton.addEventListener("click", () => this.pickRandomStudent());
+    this.initializeUI();
   }
 
-  // Method to create student cards and append them to the student list in the UI
+  initializeUI() {
+    this.createStudentCards();
+    this.pickButton.addEventListener("click", () => this.pickRandomStudent());
+    this.editButton.addEventListener("click", () => this.toggleEditMode());
+  }
+
   createStudentCards() {
-    students.forEach((student) => {
-      const card = this.createElementWithClass("div", "student-card");
-      card.textContent = student; // Set the name of the student on the card
-      this.studentList.appendChild(card); // Add the card to the student list
+    this.studentList.innerHTML = "";
+    this.availableStudents.forEach((student) => {
+      const card = this.createStudentCard(student);
+      this.studentList.appendChild(card);
     });
   }
 
-  // Method to animate student cards with a wave and jiggle effect
-  async waveJiggleCards() {
-    const waveDuration = 15; // Duration for each card animation
-    const cards = document.querySelectorAll(".student-card"); // Select all student cards
+  createStudentCard(student) {
+    const card = this.createElement("div", "student-card");
+    card.textContent = student;
+    card.dataset.student = student;
 
-    // Jiggly effect for each card
-    for (const card of cards) {
-      card.classList.add("jiggling");
-      await this.delay(waveDuration); // Pause between jiggling each card
-    }
+    const removeButton = this.createElement("button", "remove-button");
+    removeButton.textContent = "x";
+    removeButton.style.display = "none";
+    removeButton.addEventListener("click", (e) => this.toggleStudentRemoval(e));
 
-    await this.delay(500); // Pause before the next animation phase
-
-    // Highlight each card after jiggling
-    for (let i = 0; i < cards.length; i++) {
-      cards[i].classList.remove("jiggling");
-      await this.delay(waveDuration); // Pause between highlighting each card
-    }
-
-    await this.delay(200); // Short pause at the end of the animation
+    card.appendChild(removeButton);
+    return card;
   }
 
-  // Method to pick a random student from the available students
+  toggleEditMode() {
+    this.isEditMode = !this.isEditMode;
+    this.editButton.textContent = this.isEditMode ? "Done" : "Edit";
+    this.pickButton.disabled = this.isEditMode;
+
+    this.toggleRemoveButtons();
+
+    if (!this.isEditMode) {
+      this.applyRemovals();
+    }
+  }
+
+  toggleRemoveButtons() {
+    const removeButtons = document.querySelectorAll(".remove-button");
+    const display = this.isEditMode ? "block" : "none";
+    removeButtons.forEach((button) => (button.style.display = display));
+  }
+
+  toggleStudentRemoval(event) {
+    const card = event.target.closest(".student-card");
+    card.classList.toggle("crossed-out");
+  }
+
+  applyRemovals() {
+    const crossedOutCards = document.querySelectorAll(".student-card.crossed-out");
+    crossedOutCards.forEach((card) => {
+      const student = card.dataset.student;
+      this.availableStudents = this.availableStudents.filter((s) => s !== student);
+      card.remove();
+    });
+  }
+
   async pickRandomStudent() {
     if (this.availableStudents.length === 0) {
       this.pickedStudentCard.textContent = "All students have been picked!";
-      this.pickButton.disabled = true; // Disable the button if no students are left
-      return; // Exit the function if all students are already picked
+      this.pickButton.disabled = true;
+      return;
     }
 
-    // Disable pick button to prevent multiple clicks while processing
     this.pickButton.disabled = true;
-    await this.waveJiggleCards(); // Trigger the animation before picking a student
+    await this.animateCards();
 
-    // Randomly select a student from available students
-    const index = Math.floor(Math.random() * this.availableStudents.length);
-    const student = this.availableStudents.splice(index, 1)[0]; // Remove the student from the available list
+    const student = this.getRandomStudent();
+    const selectedCard = this.findStudentCard(student);
 
-    // Find and hide the corresponding card in the UI
-    const cards = document.querySelectorAll(".student-card");
-    let selectedCard;
-    cards.forEach((card) => {
-      if (card.textContent === student) {
-        selectedCard = card; // Identify the selected card
-        card.style.opacity = "0"; // Make the selected card disappear
-      }
-    });
-
-    // Animate the movement of the selected card to the picked student area
     await this.animateCardMovement(selectedCard, student);
 
-    this.pickedStudentCard.textContent = student; // Display the name of the picked student
-    selectedCard.style.display = "none"; // Remove the selected card from view
-    this.pickButton.disabled = false; // Re-enable the pick button
+    this.updatePickedStudent(student);
+    selectedCard.remove();
+    this.pickButton.disabled = false;
   }
 
-  // Method to animate the movement of the selected student card
-  async animateCardMovement(selectedCard, student) {
-    // Create a new 'moving card' element to illustrate the animation
-    const movingCard = this.createElementWithClass("div", "moving-card");
-    movingCard.textContent = student; // Set the text to the selected student
-    document.body.appendChild(movingCard); // Add the moving card to the document
+  getRandomStudent() {
+    const index = Math.floor(Math.random() * this.availableStudents.length);
+    return this.availableStudents.splice(index, 1)[0];
+  }
 
-    // Get the position of the selected card and the destination card
-    const startRect = selectedCard.getBoundingClientRect();
+  findStudentCard(student) {
+    return this.studentList.querySelector(`[data-student="${student}"]`);
+  }
+
+  async animateCards() {
+    const cards = document.querySelectorAll(".student-card");
+    await this.jiggleCards(cards);
+    await this.delay(500);
+    await this.unjiggleCards(cards);
+    await this.delay(200);
+  }
+
+  async jiggleCards(cards) {
+    for (const card of cards) {
+      card.classList.add("jiggling");
+      await this.delay(15);
+    }
+  }
+
+  async unjiggleCards(cards) {
+    for (const card of cards) {
+      card.classList.remove("jiggling");
+      await this.delay(25);
+    }
+  }
+
+  async animateCardMovement(card, student) {
+    const movingCard = this.createElement("div", "moving-card");
+    movingCard.textContent = student;
+    document.body.appendChild(movingCard);
+
+    const startRect = card.getBoundingClientRect();
     const endRect = this.pickedStudentCard.getBoundingClientRect();
 
-    // Set initial size and position for the moving card
-    Object.assign(movingCard.style, {
-      left: `${startRect.left}px`,
-      top: `${startRect.top}px`,
-    });
+    this.setCardStyle(movingCard, startRect);
+    await this.delay(50);
+    this.setCardStyle(movingCard, endRect);
 
-    await this.delay(50); // Short delay to ensure previous styles are applied
-
-    // Animate the transition to the target position and style
-    Object.assign(movingCard.style, {
-      left: `${endRect.left}px`,
-      top: `${endRect.top}px`,
-    });
-
-    await this.delay(500); // Wait for the animation to complete
-    document.body.removeChild(movingCard); // Remove the moving card from the document
+    await this.delay(500);
+    movingCard.remove();
   }
 
-  // Helper Methods
+  setCardStyle(card, rect) {
+    Object.assign(card.style, {
+      left: `${rect.left}px`,
+      top: `${rect.top}px`,
+    });
+  }
 
-  // Helper method to sleep for a given number of milliseconds
+  updatePickedStudent(student) {
+    this.pickedStudentCard.textContent = student;
+  }
+
+  createElement(tag, className) {
+    const element = document.createElement(tag);
+    element.className = className;
+    return element;
+  }
+
   delay(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
-
-  // Helper method to create an HTML element with a specified class
-  createElementWithClass(tag, className) {
-    const element = document.createElement(tag);
-    element.className = className; // Assign a class name to the element
-    return element; // Return the created element
-  }
 }
 
-// Instantiate the StudentPicker class to initialize the student picking functionality
+// Instantiate the StudentPicker class
 new StudentPicker();
