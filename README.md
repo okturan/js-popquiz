@@ -4,6 +4,10 @@
 
 The page animates a random pick from an in-memory roster, removes selected entries to avoid repeats, and includes an edit mode for excluding entries before selection.
 
+## Live demo
+
+[Open the Cloudflare Pages deployment](https://js-popquiz.pages.dev/)
+
 ## What it demonstrates
 
 - DOM construction from an in-memory array.
@@ -24,4 +28,4 @@ Edit the privacy-safe sample names at the top of `script.js` to use a different 
 
 ## Scope
 
-The picker stores nothing, sends no network requests, and has no authentication or backend. It intentionally has no package, release stream, hosted demo, or CI workflow. A future deployment should retain the sample roster and accept user-provided names locally rather than publishing personal data.
+The picker stores nothing, sends no application data over the network, and has no authentication or backend. It intentionally has no package, release stream, or application CI workflow. Cloudflare Pages deploys the static default branch; future changes must retain the sample roster and accept any real names locally rather than publishing personal data.
