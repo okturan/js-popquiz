@@ -1,58 +1,17 @@
 // List of students to be picked from
 const students = [
-  "Abdurrahman Murat Aktürk",
-  "Abre Süeda",
-  "Adem Onur Kolaylı",
-  "Ahmet Hakan Kanıcı",
-  "Aleyna Taşkömür",
-  "Ali Okhan",
-  "Alican Çatak",
-  "Aykut Öyekcin",
-  "Ayşenur Ünal",
-  "Ayşenur Şeyhvassuf",
-  "Behçet Muhammed",
-  "Boran Esin Çamlık",
-  "Cihan Özdemir",
-  "Derya Tez",
-  "Dilan Denli",
-  "Doğancan Albayrak",
-  "Ebru Cihan",
-  "Elif Durukan",
-  "Emin Akardere",
-  "Emre Ergenekon",
-  "Emre Çimen",
-  "Emrecan Kaya",
-  "Engin Gürbüz",
-  "Erdal Kobak",
-  "Erhan Algül",
-  "Erman Kaya",
-  "Esra Ceren Saçmaz",
-  "Fırat Demir",
-  "Halil Demirtaş",
-  "İsmail Safa Yılmaz",
-  "Kubilay Can Takmaz",
-  "Kübra Çiçek",
-  "Mustafa Furkan İnan",
-  "Mısra Medenioğlu",
-  "Okan Erturan",
-  "Onur Adıyaman",
-  "Onur Mergen",
-  "Onur Turkarslan",
-  "Onur Yılmaz",
-  "Onur Çetiner",
-  "Oğuzhan Sali",
-  "Rıdvan Kesken",
-  "Sedat Ay",
-  "Sergen Yanıklar",
-  "Sevde Sultan Çevik",
-  "Sinem Çobanlı Gürbüz",
-  "Sıdıka Gencer",
-  "Tuba Çakır",
-  "Yakup Eren Ermurat",
-  "Yaşar Can Damlı",
-  "Yusuf Kayabaşı",
-  "Öner Atalay",
-  "Özgür Dayanır",
+  "Ada",
+  "Bora",
+  "Cem",
+  "Deniz",
+  "Ece",
+  "Fırat",
+  "Gökçe",
+  "Işıl",
+  "Kerem",
+  "Leyla",
+  "Mert",
+  "Nehir",
 ];
 
 class StudentPicker {
@@ -87,7 +46,9 @@ class StudentPicker {
     card.dataset.student = student;
 
     const removeButton = this.createElement("button", "remove-button");
-    removeButton.textContent = "x";
+    removeButton.type = "button";
+    removeButton.textContent = "×";
+    removeButton.setAttribute("aria-label", `${student} kişisini listeden çıkar`);
     removeButton.style.display = "none";
     removeButton.addEventListener("click", (e) => this.toggleStudentRemoval(e));
 
@@ -97,7 +58,8 @@ class StudentPicker {
 
   toggleEditMode() {
     this.isEditMode = !this.isEditMode;
-    this.editButton.textContent = this.isEditMode ? "Done" : "Edit";
+    this.editButton.textContent = this.isEditMode ? "Bitti" : "Düzenleme modu";
+    this.editButton.setAttribute("aria-pressed", String(this.isEditMode));
     this.pickButton.disabled = this.isEditMode;
 
     this.toggleRemoveButtons();
@@ -129,7 +91,7 @@ class StudentPicker {
 
   async pickRandomStudent() {
     if (this.availableStudents.length === 0) {
-      this.pickedStudentCard.textContent = "All students have been picked!";
+      this.pickedStudentCard.textContent = "Tüm öğrenciler seçildi!";
       this.pickButton.disabled = true;
       return;
     }
